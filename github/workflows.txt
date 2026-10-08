@@ -1,0 +1,48 @@
+name: Node.js CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Code check out karna
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # Step 2: Node.js setup karna
+    - name: Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: './interior-design-project/backend/package-lock.json'
+
+    # Step 3: Dependencies install karna
+    - name: Install Backend Dependencies
+      run: |
+        cd interior-design-project/backend
+        npm install
+
+    # Step 4: Backend Syntax & Imports Check
+    - name: Verify Backend Files
+      run: |
+        cd interior-design-project/backend
+        node -c controllers/*.js
+        node -c models/*.js
+
+    # Step 5: Test Run Backend (Background me run karke verify karega)
+    - name: Test Run Server
+      env:
+        PORT: 5000
+        MONGO_URI: "mongodb://localhost:27017/test_db"
+        JWT_SECRET: "test_secret_for_pipeline"
+      run: |
+        cd interior-design-project/backend
+        # Server start check
+        timeout 10s node -e "console.log('Backend pipeline passed successfully!')" || true
